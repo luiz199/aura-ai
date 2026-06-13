@@ -146,13 +146,14 @@ export default function ConfiguracoesPage() {
                   updatePreferences({ ...user?.preferences, [item.key]: newVal })
                 }}
                 className={cn(
-                  "relative w-10 h-5 rounded-full transition-all duration-300",
+                  "relative w-12 h-7 rounded-full transition-all duration-300 flex items-center px-0.5",
                   (user?.preferences as any)?.[item.key] ? "bg-neon-cyan/30" : "bg-white/[0.06]",
                 )}
+                aria-label={item.label}
               >
                 <div className={cn(
-                  "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 shadow-lg",
-                  (user?.preferences as any)?.[item.key] ? "left-5 bg-neon-cyan" : "left-0.5",
+                  "w-5 h-5 rounded-full bg-white transition-all duration-300 shadow-lg",
+                  (user?.preferences as any)?.[item.key] ? "translate-x-5 bg-neon-cyan" : "translate-x-0",
                 )} />
               </button>
             </div>

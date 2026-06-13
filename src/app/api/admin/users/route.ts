@@ -1,6 +1,51 @@
 import { NextRequest, NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
 import { requireAuth } from "@/lib/auth"
 import { getDB } from "@/lib/mongodb"
+
+export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+  if (auth.tipo !== "admin") {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 })
+  }
+
+  try {
+    const { nome, email, password, tipo } = await request.json()
+    if (!nome || !email || !password) {
+      return NextResponse.json({ error: "Nome, email e senha são obrigatórios" }, { status: 400 })
+    }
+    if (password.length < 6) {
+      return NextResponse.json({ error: "Senha deve ter pelo menos 6 caracteres" }, { status: 400 })
+    }
+
+    const db = await getDB()
+    const existing = await db.collection("users").findOne({ email })
+    if (existing) {
+      return NextResponse.json({ error: "Email já cadastrado" }, { status: 400 })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const result = await db.collection("users").insertOne({
+      nome,
+      email,
+      password: hashedPassword,
+      tipo: tipo === "admin" ? "admin" : "user",
+      createdAt: new Date(),
+      preferences: { theme: "dark", language: "pt-BR", notifications: true },
+    })
+
+    return NextResponse.json({
+      id: result.insertedId.toString(),
+      nome,
+      email,
+      tipo: tipo === "admin" ? "admin" : "user",
+      createdAt: new Date(),
+    })
+  } catch {
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 })
+  }
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request)

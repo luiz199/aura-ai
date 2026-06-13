@@ -206,6 +206,7 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
+  min-height: 44px;
   background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(123, 97, 255, 0.1));
   border: 1px solid rgba(0, 229, 255, 0.2);
   border-radius: 12px;

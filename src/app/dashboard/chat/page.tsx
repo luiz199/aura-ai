@@ -258,35 +258,52 @@ export default function ChatPage() {
 
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Thread sidebar */}
-        <div className={cn("w-56 flex-shrink-0 flex flex-col gap-2", !showSidebar && "hidden sm:hidden")}>
-          <div className="glass-card p-2 space-y-1 flex-1 overflow-y-auto scrollbar-custom">
-            <p className="text-[10px] text-white/20 uppercase tracking-widest font-mono px-2 py-1">Conversas</p>
+        <div className={cn(
+          "flex-shrink-0 flex flex-col gap-2 z-20",
+          "fixed inset-x-0 top-16 bottom-0 lg:static lg:w-56 bg-dark-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none p-4 lg:p-0",
+          !showSidebar && "hidden lg:flex",
+        )}>
+          <div className="flex items-center justify-between mb-2 lg:hidden">
+            <p className="text-xs text-white/30 font-mono uppercase tracking-widest">Conversas</p>
+            <button onClick={() => setShowSidebar(false)}
+              className="text-xs text-white/30 hover:text-white/60 transition-colors px-2 py-1.5 min-h-[44px]">
+              Fechar
+            </button>
+          </div>
+          <div className="glass-card lg:p-2 space-y-1 flex-1 overflow-y-auto scrollbar-custom">
+            <p className="text-[10px] text-white/20 uppercase tracking-widest font-mono px-2 py-1 hidden lg:block">Conversas</p>
             {threads.length === 0 && (
               <p className="text-xs text-white/20 text-center py-8">Nenhuma conversa</p>
             )}
             {threads.map((thread) => (
               <div key={thread.id} className={cn(
-                "flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-all group",
+                "flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer transition-all",
                 activeThread === thread.id ? "bg-neon-cyan/[0.06] border border-neon-cyan/20" : "hover:bg-white/[0.02]",
               )}>
-                <div className="flex-1 min-w-0" onClick={() => setActiveThread(thread.id)}>
+                <div className="flex-1 min-w-0" onClick={() => { setActiveThread(thread.id); setShowSidebar(false) }}>
                   <p className="text-xs text-white/60 truncate">{thread.title}</p>
                   <p className="text-[10px] text-white/20">{new Date(thread.createdAt).toLocaleDateString("pt-BR")}</p>
                 </div>
                 <button onClick={() => deleteThread(thread.id)}
-                  className="p-1 rounded hover:bg-white/[0.04] text-white/20 hover:text-neon-pink opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-1.5 rounded hover:bg-white/[0.04] text-white/20 hover:text-neon-pink transition-all"
                   aria-label="Excluir conversa"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
           </div>
-          <button onClick={() => setShowSidebar(!showSidebar)}
-            className="text-[11px] text-white/30 hover:text-white/60 transition-colors text-center sm:hidden">
-            {showSidebar ? "Ocultar conversas" : "Mostrar conversas"}
-          </button>
         </div>
+
+        {/* Mobile sidebar toggle */}
+        {!showSidebar && (
+          <button onClick={() => setShowSidebar(true)}
+            className="fixed left-4 bottom-4 z-30 lg:hidden bg-dark-800/80 backdrop-blur-xl border border-white/[0.06] p-3 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center shadow-xl">
+            <svg className="w-5 h-5 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
 
         {/* Messages */}
         <div className="flex-1 flex flex-col min-h-0">

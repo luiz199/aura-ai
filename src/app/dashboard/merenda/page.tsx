@@ -515,27 +515,30 @@ export default function MerendaPage() {
       <AnimatePresence>
         {selected.size > 0 && (
           <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass-card px-4 py-3 rounded-2xl border border-neon-cyan/20 flex items-center gap-3 shadow-2xl shadow-neon-cyan/5">
-            <span className="text-xs text-white/60 font-mono">{selected.size} selecionado(s)</span>
-            <div className="w-px h-5 bg-white/[0.06]" />
-            <select value={batchCat} onChange={(e) => setBatchCat(e.target.value)}
-              className="input-neon !bg-dark-900 text-xs py-1.5 px-2 w-32 text-white/60">
-              <option value="" className="bg-dark-700 text-white/40">Mover para...</option>
-              {CATEGORIAS.map((c) => <option key={c} value={c} className="bg-dark-700 text-white/80">{c}</option>)}
-            </select>
-            <button onClick={batchUpdateCategory} disabled={!batchCat}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors disabled:opacity-30">
-              <Layers className="w-3 h-3" /> Alterar
-            </button>
-            <div className="w-px h-5 bg-white/[0.06]" />
-            <button onClick={batchDelete}
-              className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
-              <Trash2 className="w-3 h-3" /> Excluir
-            </button>
-            <div className="w-px h-5 bg-white/[0.06]" />
-            <button onClick={clearSelection} className="text-xs text-white/20 hover:text-white/50 transition-colors">
-              <X className="w-3 h-3" />
-            </button>
+            className="fixed bottom-4 sm:bottom-6 left-2 sm:left-1/2 right-2 sm:right-auto sm:-translate-x-1/2 z-50 glass-card px-3 sm:px-4 py-3 rounded-2xl border border-neon-cyan/20 flex flex-wrap items-center gap-2 shadow-2xl shadow-neon-cyan/5">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-xs text-white/60 font-mono whitespace-nowrap">{selected.size} selecionado(s)</span>
+              <button onClick={clearSelection} className="ml-auto sm:ml-0 text-white/20 hover:text-white/50 transition-colors p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="w-px h-5 bg-white/[0.06] hidden sm:block" />
+              <select value={batchCat} onChange={(e) => setBatchCat(e.target.value)}
+                className="input-neon !bg-dark-900 text-xs py-1.5 px-2 w-auto min-w-[120px] sm:w-32 text-white/60">
+                <option value="" className="bg-dark-700 text-white/40">Mover para...</option>
+                {CATEGORIAS.map((c) => <option key={c} value={c} className="bg-dark-700 text-white/80">{c}</option>)}
+              </select>
+              <button onClick={batchUpdateCategory} disabled={!batchCat}
+                className="text-xs px-3 py-1.5 min-h-[36px] rounded-lg border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors disabled:opacity-30">
+                <Layers className="w-3 h-3" /> Alterar
+              </button>
+              <div className="w-px h-5 bg-white/[0.06]" />
+              <button onClick={batchDelete}
+                className="text-xs px-3 py-1.5 min-h-[36px] rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
+                <Trash2 className="w-3 h-3" /> Excluir
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
