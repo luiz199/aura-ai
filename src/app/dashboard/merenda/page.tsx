@@ -6,7 +6,7 @@ import { useApp } from "@/context/AppContext"
 import {
   Package, Plus, Trash2, Edit3, FileDown, AlertTriangle,
   Clock, CheckCircle, X, Search, Square, CheckSquare,
-  ChevronDown, Layers,
+  ChevronDown, Layers, FileJson, FileText, Download, Upload,
 } from "lucide-react"
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
 import toast from "react-hot-toast"
@@ -52,7 +52,20 @@ export default function MerendaPage() {
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [batchCat, setBatchCat] = useState("")
+  const [showExport, setShowExport] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [importText, setImportText] = useState("")
+  const [importing, setImporting] = useState(false)
   const selectAllRef = useRef<HTMLInputElement>(null)
+  const exportRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setShowExport(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
   const load = useCallback(async (status = "") => {
     setLoading(true)
@@ -176,6 +189,39 @@ export default function MerendaPage() {
     } catch { toast.error("Erro ao atualizar") }
   }
 
+  const downloadFile = async (format: "csv" | "json" | "pdf") => {
+    setShowExport(false)
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch(`/api/merenda/export/${format}`, { headers: { Authorization: `Bearer ${token}` } })
+      if (!res.ok) { toast.error("Erro ao exportar"); return }
+      const blob = await res.blob()
+      const ext = format === "pdf" ? "pdf" : format
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a"); a.href = url; a.download = `merenda-${new Date().toISOString().split("T")[0]}.${ext}`
+      a.click(); URL.revokeObjectURL(url)
+      toast.success(`${format.toUpperCase()} exportado!`)
+    } catch { toast.error("Erro ao exportar") }
+  }
+
+  const doImport = async () => {
+    if (!importText.trim()) { toast.error("Cole o CSV primeiro"); return }
+    setImporting(true)
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch("/api/merenda/import/csv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ csv: importText }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`${data.imported} produto(s) importados${data.errors > 0 ? `, ${data.errors} erro(s)` : ""}`)
+        setShowImport(false); setImportText(""); load()
+      } else toast.error(data.error || "Erro ao importar")
+    } catch { toast.error("Erro ao importar") } finally { setImporting(false) }
+  }
+
   const exportPDF = async () => {
     try {
       const token = localStorage.getItem("aura_token")
@@ -205,8 +251,34 @@ export default function MerendaPage() {
           <p className="text-sm text-white/30 mt-1">Gest\u00e3o de produtos e validades</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportPDF} className="btn-neon text-xs px-4 py-2">
-            <FileDown className="w-3 h-3" /> PDF
+          <div className="relative" ref={exportRef}>
+            <button onClick={() => setShowExport(!showExport)}
+              className="btn-neon text-xs px-4 py-2">
+              <FileDown className="w-3 h-3" /> Exportar <ChevronDown className="w-3 h-3 ml-1" />
+            </button>
+            <AnimatePresence>
+              {showExport && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                  className="absolute right-0 mt-2 w-36 glass-card p-1 rounded-xl z-50">
+                  {[
+                    { label: "PDF", format: "pdf" as const },
+                    { label: "CSV", format: "csv" as const },
+                    { label: "JSON", format: "json" as const },
+                  ].map((opt) => (
+                    <button key={opt.format} onClick={() => downloadFile(opt.format)}
+                      className="flex items-center gap-2 w-full text-xs text-white/60 hover:text-white hover:bg-white/[0.04] px-3 py-2 rounded-lg transition-colors">
+                      {opt.format === "pdf" ? <FileDown className="w-3.5 h-3.5" />
+                        : opt.format === "csv" ? <FileText className="w-3.5 h-3.5" />
+                        : <FileJson className="w-3.5 h-3.5" />}
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <button onClick={() => setShowImport(true)} className="btn-neon text-xs px-4 py-2">
+            <Upload className="w-3 h-3" /> Importar
           </button>
           <button onClick={openNew} className="btn-neon text-xs px-4 py-2">
             <Plus className="w-3 h-3" /> Novo Produto
@@ -360,6 +432,35 @@ export default function MerendaPage() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showImport && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowImport(false)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="glass-card p-5 w-full max-w-lg rounded-2xl"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white/80">Importar CSV</h3>
+                <button onClick={() => setShowImport(false)} className="text-white/20 hover:text-white/50"><X className="w-4 h-4" /></button>
+              </div>
+              <p className="text-xs text-white/30 mb-3">Cole os dados CSV. Colunas: <span className="text-white/50 font-mono">Produto, Validade, Quantidade, Categoria</span></p>
+              <textarea value={importText} onChange={(e) => setImportText(e.target.value)}
+                className="input-neon w-full h-40 resize-none text-xs font-mono" placeholder="Produto,Validade,Quantidade,Categoria&#10;Arroz,2026-12-31,10,Graos&#10;Leite,2026-06-15,20,Latcinios" />
+              <div className="flex gap-2 mt-3 justify-end">
+                <button onClick={() => setShowImport(false)} className="text-xs text-white/30 hover:text-white/50 px-3 py-2 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={doImport} disabled={importing}
+                  className="btn-neon text-xs px-4 py-2">
+                  {importing ? <div className="w-4 h-4 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" /> : "Importar"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selected.size > 0 && (
