@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
       token,
       user: { id: result.insertedId.toString(), nome, email, tipo: "user" },
     })
-  } catch (error) {
-    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })
+  } catch (error: any) {
+    console.error("Register error:", error?.message || error)
+    return NextResponse.json({ error: "Erro: " + (error?.message || "desconhecido") }, { status: 500 })
   }
 }
