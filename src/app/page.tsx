@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useApp } from "@/context/AppContext"
 import LoadingScreen from "@/components/LoadingScreen"
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from "lucide-react"
+import Link from "next/link"
 import toast from "react-hot-toast"
 
 export default function Home() {
@@ -99,6 +100,9 @@ export default function Home() {
               <><ArrowRight className="w-4 h-4" /> Entrar</>
             )}
           </button>
+          <Link href="/auth/esqueci-senha" className="block text-center text-xs text-white/30 hover:text-neon-cyan/70 transition-colors mt-2">
+            {t?.auth?.esqueciSenha || "Esqueci a senha?"}
+          </Link>
         </form>
       </motion.div>
     </div>
