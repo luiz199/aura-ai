@@ -56,6 +56,8 @@ export default function MerendaPage() {
   const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState("")
   const [importing, setImporting] = useState(false)
+  const [showDeleteAll, setShowDeleteAll] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const selectAllRef = useRef<HTMLInputElement>(null)
   const exportRef = useRef<HTMLDivElement>(null)
 
@@ -222,6 +224,20 @@ export default function MerendaPage() {
     } catch { toast.error("Erro ao importar") } finally { setImporting(false) }
   }
 
+  const deleteAll = async () => {
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch("/api/merenda/batch/delete-all", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`${data.deleted} produto(s) exclu\u00eddos!`)
+        setShowDeleteAll(false); setDeleteConfirmText(""); load()
+      } else { toast.error("Erro ao excluir") }
+    } catch { toast.error("Erro ao excluir") }
+  }
+
   const exportPDF = async () => {
     try {
       const token = localStorage.getItem("aura_token")
@@ -279,6 +295,9 @@ export default function MerendaPage() {
           </div>
           <button onClick={() => setShowImport(true)} className="btn-neon text-xs px-4 py-2">
             <Upload className="w-3 h-3" /> Importar
+          </button>
+          <button onClick={() => setShowDeleteAll(true)} className="btn-neon text-xs px-4 py-2 border-red-500/30 text-red-400 hover:bg-red-500/10">
+            <Trash2 className="w-3 h-3" /> Deletar Tudo
           </button>
           <button onClick={openNew} className="btn-neon text-xs px-4 py-2">
             <Plus className="w-3 h-3" /> Novo Produto
@@ -348,8 +367,8 @@ export default function MerendaPage() {
               <div>
                 <label className="text-[11px] text-white/40 font-mono uppercase tracking-wider block mb-1">Categoria</label>
                 <select value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-                  className="input-neon w-full">
-                  {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  className="input-neon w-full text-white/80">
+                  {CATEGORIAS.map((c) => <option key={c} value={c} className="bg-dark-700 text-white/80">{c}</option>)}
                 </select>
               </div>
               <button type="submit" disabled={saving}
@@ -434,6 +453,37 @@ export default function MerendaPage() {
       )}
 
       <AnimatePresence>
+        {showDeleteAll && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => { setShowDeleteAll(false); setDeleteConfirmText("") }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="glass-card p-6 w-full max-w-sm rounded-2xl text-center"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="w-7 h-7 text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white/90 mb-2">Deletar Tudo?</h3>
+              <p className="text-sm text-white/40 mb-5">
+                Essa a\u00e7\u00e3o vai excluir <strong className="text-red-400">todos os {stats.total} produto(s)</strong> permanentemente. N\u00e3o tem volta.
+              </p>
+              <p className="text-xs text-white/30 font-mono mb-2">Digite <strong className="text-neon-cyan">DELETAR</strong> para confirmar</p>
+              <input value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="input-neon text-center text-sm font-mono mb-4" placeholder="DELETAR" />
+              <div className="flex gap-3">
+                <button onClick={() => { setShowDeleteAll(false); setDeleteConfirmText("") }}
+                  className="flex-1 py-3 rounded-xl border border-white/[0.06] text-sm text-white/40 hover:text-white/70 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={deleteAll} disabled={deleteConfirmText !== "DELETAR"}
+                  className="flex-1 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400 font-medium transition-all hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                  <Trash2 className="w-4 h-4 inline mr-1.5" /> Deletar Tudo
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
         {showImport && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -469,9 +519,9 @@ export default function MerendaPage() {
             <span className="text-xs text-white/60 font-mono">{selected.size} selecionado(s)</span>
             <div className="w-px h-5 bg-white/[0.06]" />
             <select value={batchCat} onChange={(e) => setBatchCat(e.target.value)}
-              className="input-neon !bg-dark-900 text-xs py-1.5 px-2 w-32">
-              <option value="">Mover para...</option>
-              {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+              className="input-neon !bg-dark-900 text-xs py-1.5 px-2 w-32 text-white/60">
+              <option value="" className="bg-dark-700 text-white/40">Mover para...</option>
+              {CATEGORIAS.map((c) => <option key={c} value={c} className="bg-dark-700 text-white/80">{c}</option>)}
             </select>
             <button onClick={batchUpdateCategory} disabled={!batchCat}
               className="text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors disabled:opacity-30">
