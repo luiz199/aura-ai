@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
@@ -16,6 +16,7 @@ type Message = { role: "user" | "assistant"; content: string; timestamp: number 
 type ChatThread = { id: string; title: string; messages: Message[]; createdAt: number }
 
 const STORAGE_KEY = "aura_chats"
+const AUTH_HEADER = () => ({ Authorization: `Bearer ${localStorage.getItem("aura_token")}` })
 
 const suggestions = [
   { icon: FileText, label: "Resumir documento", desc: "Resuma um texto ou PDF" },
@@ -40,22 +41,78 @@ export default function ChatPage() {
   const activeMessages = threads.find((t) => t.id === activeThread)?.messages || []
   const welcome = activeMessages.length === 0
 
-  // Load from localStorage
+  // Load threads from MongoDB + localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        const parsed = JSON.parse(saved) as ChatThread[]
-        setThreads(parsed)
-        if (parsed.length > 0) setActiveThread(parsed[0].id)
+    const load = async () => {
+      let merged: ChatThread[] = []
+
+      // Load from localStorage (instant)
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        if (saved) {
+          merged = JSON.parse(saved) as ChatThread[]
+        }
+      } catch {}
+
+      // Load from MongoDB (sync across devices)
+      try {
+        const res = await fetch("/api/chat/threads", { headers: { ...AUTH_HEADER() } })
+        if (res.ok) {
+          const data = await res.json()
+          const serverThreads: ChatThread[] = (data.threads || []).map((t: any) => ({
+            id: t.threadId,
+            title: t.title,
+            messages: t.messages || [],
+            createdAt: new Date(t.createdAt).getTime(),
+          }))
+          // Merge: server wins, but keep local messages if more recent
+          const localMap = new Map(merged.map((t) => [t.id, t]))
+          for (const st of serverThreads) {
+            const existing = localMap.get(st.id)
+            if (!existing || existing.messages.length < st.messages.length) {
+              localMap.set(st.id, st)
+            }
+          }
+          merged = Array.from(localMap.values()).sort((a, b) => b.createdAt - a.createdAt)
+        }
+      } catch {}
+
+      setThreads(merged)
+      if (merged.length > 0 && !activeThread) {
+        setActiveThread(merged[0].id)
       }
-    } catch {}
+    }
+    load()
   }, [])
 
-  // Save to localStorage
+  // Debounced save to MongoDB
+  const saveToServer = useMemo(() => {
+    let timer: ReturnType<typeof setTimeout>
+    return (threads: ChatThread[]) => {
+      clearTimeout(timer)
+      timer = setTimeout(async () => {
+        for (const thread of threads) {
+          try {
+            await fetch("/api/chat/threads", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...AUTH_HEADER() },
+              body: JSON.stringify({
+                threadId: thread.id,
+                title: thread.title,
+                messages: thread.messages,
+              }),
+            })
+          } catch {}
+        }
+      }, 2000)
+    }
+  }, [])
+
+  // Save to localStorage + trigger server sync
   useEffect(() => {
     if (threads.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(threads))
+      saveToServer(threads)
     }
   }, [threads])
 
@@ -83,6 +140,8 @@ export default function ChatPage() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })
+    // Delete from server
+    fetch(`/api/chat/threads/${id}`, { method: "DELETE", headers: { ...AUTH_HEADER() } }).catch(() => {})
   }, [activeThread])
 
   // Keyboard shortcuts
