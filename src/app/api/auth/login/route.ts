@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
         preferences: user.preferences || { theme: "dark", language: "pt-BR" },
       },
     })
-  } catch (error) {
-    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 })
+  } catch (error: any) {
+    console.error("Login error:", error?.message || error)
+    return NextResponse.json({ error: "Erro interno: " + (error?.message || "desconhecido") }, { status: 500 })
   }
 }
