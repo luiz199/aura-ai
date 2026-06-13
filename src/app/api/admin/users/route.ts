@@ -25,6 +25,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  const auth = await requireAuth(request)
+  if (auth instanceof NextResponse) return auth
+
+  try {
+    const { userId, tipo } = await request.json()
+    if (!userId || !tipo) {
+      return NextResponse.json({ error: "userId e tipo obrigat\u00f3rios" }, { status: 400 })
+    }
+    const db = await getDB()
+    const { ObjectId } = require("mongodb")
+    await db.collection("users").updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { tipo } },
+    )
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const auth = await requireAuth(request)
   if (auth instanceof NextResponse) return auth
