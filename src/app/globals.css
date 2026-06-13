@@ -227,6 +227,14 @@
   transform: translateY(0);
 }
 
+.safe-p {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
 select.input-neon option {
   background: #0f1128;
   color: rgba(255, 255, 255, 0.8);
