@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -18,7 +18,7 @@ const LINKS = [
   { href: "/dashboard/historico", icon: History, key: "historico" },
   { href: "/dashboard/favoritos", icon: Heart, key: "favoritos" },
   { href: "/dashboard/estatisticas", icon: BarChart3, key: "estatisticas" },
-  { href: "/dashboard/merenda", icon: Apple, key: "merenda" },
+  { href: "/dashboard/merenda", icon: Apple, key: "merenda", alerta: true },
   { href: "/dashboard/admin", icon: Shield, key: "admin" },
   { href: "/dashboard/configuracoes", icon: Settings, key: "configuracoes" },
 ]
@@ -28,6 +28,21 @@ export default function Sidebar() {
   const { t, user, logout } = useApp()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [alertCount, setAlertCount] = useState(0)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("aura_token")
+        if (!token) return
+        const res = await fetch("/api/merenda/alertas", { headers: { Authorization: `Bearer ${token}` } })
+        if (res.ok) {
+          const data = await res.json()
+          setAlertCount(data.vencidos + data.venceHoje)
+        }
+      } catch {}
+    })()
+  }, [])
 
   return (
     <>
@@ -109,7 +124,17 @@ export default function Sidebar() {
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
-                  <link.icon className={cn("w-[18px] h-[18px] relative z-10", isActive ? "text-neon-cyan" : "")} />
+                  <div className="relative z-10">
+                    <link.icon className={cn("w-[18px] h-[18px]", isActive ? "text-neon-cyan" : "")} />
+                    {link.alerta && alertCount > 0 && (
+                      <span className={cn(
+                        "absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 border-2 border-dark-900 rounded-full flex items-center justify-center text-[9px] font-bold text-white",
+                        collapsed ? "" : "",
+                      )}>
+                        {alertCount > 9 ? "9+" : alertCount}
+                      </span>
+                    )}
+                  </div>
                   {!collapsed && <span className="text-sm relative z-10">{t?.nav?.[link.key as keyof typeof t.nav] || link.key}</span>}
                   {isActive && !collapsed && (
                     <div className="w-1 h-1 rounded-full bg-neon-cyan ml-auto relative z-10 glow-dot" />

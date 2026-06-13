@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
 import { CountUp } from "@/components/ui/CountUp"
 import {
-  MessageSquareText, Users, FileText, Clock, TrendingUp, Activity,
-  Bot, Sparkles, ArrowUpRight,
+  MessageSquareText, Users, FileText, Clock, TrendingUp,
+  Bot, Sparkles, ArrowUpRight, Apple, AlertTriangle, ChevronRight,
 } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts"
+import toast from "react-hot-toast"
 
 const chartData = [
   { name: "Seg", conversas: 180, usuarios: 120, ia: 90 },
@@ -22,19 +24,45 @@ const chartData = [
   { name: "Dom", conversas: 170, usuarios: 100, ia: 80 },
 ]
 
+function getStatus(d: string) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+  const val = new Date(d); val.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((val.getTime() - hoje.getTime()) / 86400000)
+  if (diff < 0) return { label: "Vencido", color: "text-red-400", icon: AlertTriangle }
+  if (diff === 0) return { label: "Vence hoje", color: "text-orange-400", icon: AlertTriangle }
+  return { label: `${diff} dia(s)`, color: "text-yellow-400", icon: AlertTriangle }
+}
+
 export default function DashboardPage() {
   const { t } = useApp()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<any>(null)
+  const [alertas, setAlertas] = useState<any>(null)
 
   useEffect(() => {
     (async () => {
+      const token = localStorage.getItem("aura_token")
       try {
-        const token = localStorage.getItem("aura_token")
-        const res = await fetch("/api/dashboard", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (res.ok) setData(await res.json())
+        const [dRes, aRes] = await Promise.all([
+          fetch("/api/dashboard", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("/api/merenda/alertas", { headers: { Authorization: `Bearer ${token}` } }),
+        ])
+        if (dRes.ok) setData(await dRes.json())
+        if (aRes.ok) {
+          const alerts = await aRes.json()
+          setAlertas(alerts)
+          if (alerts.vencidos > 0) {
+            toast(
+              `${alerts.vencidos} produto(s) vencido(s) na merenda!`,
+              { icon: "\u26A0\uFE0F", duration: 5000 },
+            )
+          } else if (alerts.venceHoje > 0) {
+            toast(
+              `${alerts.venceHoje} produto(s) vence(m) hoje!`,
+              { icon: "\u23F0", duration: 4000 },
+            )
+          }
+        }
       } catch {} finally {
         setLoading(false)
       }
@@ -88,51 +116,87 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.semanal || "Atividade Semanal"}</h3>
-            <div className="flex items-center gap-4 text-[11px]">
-              <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-cyan" /> Conversas</span>
-              <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-purple" /> IA</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 sm:p-6 sm:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.semanal || "Atividade Semanal"}</h3>
+              <div className="flex items-center gap-4 text-[11px]">
+                <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-cyan" /> Conversas</span>
+                <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-purple" /> IA</span>
+              </div>
             </div>
-          </div>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "rgba(10,11,30,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }} />
-                <Line type="monotone" dataKey="conversas" stroke="#00E5FF" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="ia" stroke="#7B61FF" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
+            <div className="h-64 sm:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: "rgba(10,11,30,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }} />
+                  <Line type="monotone" dataKey="conversas" stroke="#00E5FF" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="ia" stroke="#7B61FF" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.usuariosDia || "Usu\u00e1rios por Dia"}</h3>
-            <TrendingUp className="w-4 h-4 text-white/20" />
-          </div>
-          <div className="h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "rgba(10,11,30,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }} />
-                <Bar dataKey="usuarios" fill="#00FFA3" radius={[4, 4, 0, 0]} opacity={0.6} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-      </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.usuariosDia || "Usu\u00e1rios por Dia"}</h3>
+              <TrendingUp className="w-4 h-4 text-white/20" />
+            </div>
+            <div className="h-64 sm:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
+                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: "rgba(10,11,30,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }} />
+                  <Bar dataKey="usuarios" fill="#00FFA3" radius={[4, 4, 0, 0]} opacity={0.6} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
 
-      {loading ? (
-        <TableSkeleton rows={4} />
-      ) : (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6">
+            <Link href="/dashboard/merenda" className="flex items-center justify-between mb-3 group">
+              <h3 className="text-sm font-semibold text-white/80 flex items-center gap-2">
+                <Apple className="w-4 h-4" /> Merenda
+              </h3>
+              <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+            </Link>
+            {alertas ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Vencidos</span>
+                  <span className={cn("font-mono font-bold", alertas.vencidos > 0 ? "text-red-400" : "text-green-400")}>
+                    {alertas.vencidos}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">Vence hoje</span>
+                  <span className={cn("font-mono font-bold", alertas.venceHoje > 0 ? "text-orange-400" : "text-green-400")}>
+                    {alertas.venceHoje}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/40">A vencer (7d)</span>
+                  <span className={cn("font-mono font-bold", alertas.aVencer > 0 ? "text-yellow-400" : "text-green-400")}>
+                    {alertas.aVencer}
+                  </span>
+                </div>
+                {alertas.total > 0 && (
+                  <Link href="/dashboard/merenda" className="block text-center text-[11px] text-neon-cyan hover:text-neon-cyan/70 mt-2 transition-colors">
+                    Ver todos os alertas
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-white/20">Sem dados</div>
+            )}
+          </motion.div>
+        </div>
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.recente || "Atividade Recente"}</h3>
@@ -153,7 +217,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
-      )}
+      </div>
     </div>
   )
 }
