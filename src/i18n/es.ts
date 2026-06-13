@@ -12,6 +12,7 @@ const esES = {
     estatisticas: "Estad\u00edsticas",
     configuracoes: "Ajustes",
     admin: "Admin",
+    merenda: "Merienda",
   },
   dashboard: {
     title: "Panel",

@@ -12,6 +12,7 @@ const ptBR = {
     estatisticas: "Estat\u00edsticas",
     configuracoes: "Configura\u00e7\u00f5es",
     admin: "Admin",
+    merenda: "Merenda",
   },
   dashboard: {
     title: "Dashboard",

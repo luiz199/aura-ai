@@ -12,6 +12,7 @@ const enUS = {
     estatisticas: "Statistics",
     configuracoes: "Settings",
     admin: "Admin",
+    merenda: "Meals",
   },
   dashboard: {
     title: "Dashboard",
