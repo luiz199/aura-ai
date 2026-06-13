@@ -43,8 +43,8 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
             />
           </div>
 
-          <div className="relative flex flex-col items-center gap-10">
-            <div className="relative flex items-center justify-center">
+          <div className="flex flex-col items-center gap-10">
+            <div className="relative" style={{ width: 100, height: 100 }}>
               <svg width="100" height="100" viewBox="0 0 100 100" className="absolute inset-0">
                 <defs>
                   <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -80,7 +80,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-                className="relative"
+                className="absolute inset-0 flex items-center justify-center"
               >
                 <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
                   <motion.path
