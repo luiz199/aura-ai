@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useApp } from "@/context/AppContext"
 import {
   Package, Plus, Trash2, Edit3, FileDown, AlertTriangle,
-  Clock, CheckCircle, X, Search, FileText,
+  Clock, CheckCircle, X, Search, Square, CheckSquare,
+  ChevronDown, Layers,
 } from "lucide-react"
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
 import toast from "react-hot-toast"
@@ -49,6 +50,9 @@ export default function MerendaPage() {
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState<string>("")
   const [saving, setSaving] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [batchCat, setBatchCat] = useState("")
+  const selectAllRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async (status = "") => {
     setLoading(true)
@@ -71,6 +75,33 @@ export default function MerendaPage() {
   const filtered = products.filter((p) =>
     p.nome.toLowerCase().includes(search.toLowerCase())
   )
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id))
+  const someFilteredSelected = filtered.some((p) => selected.has(p.id))
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someFilteredSelected && !allFilteredSelected
+    }
+  }, [someFilteredSelected, allFilteredSelected])
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map((p) => p.id)))
+    }
+  }
+
+  const clearSelection = () => setSelected(new Set())
 
   const openNew = () => { setEditingId(null); setForm(emptyForm); setShowForm(true) }
 
@@ -110,6 +141,39 @@ export default function MerendaPage() {
       if (res.ok) { toast.success("Exclu\u00eddo"); load() }
       else toast.error("Erro ao excluir")
     } catch { toast.error("Erro ao excluir") }
+  }
+
+  const batchDelete = async () => {
+    if (selected.size === 0) return
+    if (!confirm(`Excluir ${selected.size} produto(s)?`)) return
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch("/api/merenda/batch/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      })
+      if (res.ok) {
+        toast.success(`${selected.size} produto(s) exclu\u00eddo(s)`)
+        setSelected(new Set()); load()
+      } else toast.error("Erro ao excluir")
+    } catch { toast.error("Erro ao excluir") }
+  }
+
+  const batchUpdateCategory = async () => {
+    if (selected.size === 0 || !batchCat) return
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch("/api/merenda/batch/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ids: Array.from(selected), data: { categoria: batchCat } }),
+      })
+      if (res.ok) {
+        toast.success(`Categoria alterada para ${selected.size} produto(s)`)
+        setSelected(new Set()); setBatchCat(""); load()
+      } else toast.error("Erro ao atualizar")
+    } catch { toast.error("Erro ao atualizar") }
   }
 
   const exportPDF = async () => {
@@ -238,29 +302,45 @@ export default function MerendaPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-[11px] text-white/30 uppercase tracking-wider font-mono">
-                  <th className="text-left py-3 px-4">Produto</th>
-                  <th className="text-left py-3 px-4 hidden sm:table-cell">Categoria</th>
-                  <th className="text-left py-3 px-4">Validade</th>
-                  <th className="text-center py-3 px-4">Qtd</th>
-                  <th className="text-left py-3 px-4">Status</th>
-                  <th className="text-right py-3 px-4">A\u00e7\u00f5es</th>
+                  <th className="py-3 pl-4 pr-2 w-10">
+                    <button onClick={toggleSelectAll} className="p-1" aria-label="Selecionar todos">
+                      {allFilteredSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" />
+                        : someFilteredSelected ? <ChevronDown className="w-4 h-4 text-white/40" />
+                        : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
+                    </button>
+                  </th>
+                  <th className="text-left py-3 pr-4">Produto</th>
+                  <th className="text-left py-3 pr-4 hidden sm:table-cell">Categoria</th>
+                  <th className="text-left py-3 pr-4">Validade</th>
+                  <th className="text-center py-3 pr-4">Qtd</th>
+                  <th className="text-left py-3 pr-4">Status</th>
+                  <th className="text-right py-3 pr-4">A\u00e7\u00e3o</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((p) => {
                   const st = getStatus(p.expiryDate)
+                  const isSelected = selected.has(p.id)
                   return (
-                    <tr key={p.id} className="border-t border-white/[0.04] text-white/60 hover:bg-white/[0.02] transition-colors">
-                      <td className="py-3 px-4 font-medium text-white/80">{p.nome}</td>
-                      <td className="py-3 px-4 hidden sm:table-cell text-white/30">{p.categoria}</td>
-                      <td className="py-3 px-4 text-white/40 text-[13px]">{new Date(p.expiryDate).toLocaleDateString("pt-BR")}</td>
-                      <td className="py-3 px-4 text-center text-white/40">{p.quantidade}</td>
-                      <td className="py-3 px-4">
+                    <tr key={p.id} onClick={() => toggleSelect(p.id)}
+                      className={`border-t border-white/[0.04] text-white/60 transition-colors cursor-pointer ${
+                        isSelected ? "bg-neon-cyan/[0.03]" : "hover:bg-white/[0.02]"
+                      }`}>
+                      <td className="py-3 pl-4 pr-2" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => toggleSelect(p.id)} className="p-1" aria-label="Selecionar">
+                          {isSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" /> : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
+                        </button>
+                      </td>
+                      <td className="py-3 pr-4 font-medium text-white/80">{p.nome}</td>
+                      <td className="py-3 pr-4 hidden sm:table-cell text-white/30">{p.categoria}</td>
+                      <td className="py-3 pr-4 text-white/40 text-[13px]">{new Date(p.expiryDate).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-3 pr-4 text-center text-white/40">{p.quantidade}</td>
+                      <td className="py-3 pr-4">
                         <span className={`text-[11px] px-2 py-0.5 rounded-full border font-mono inline-flex items-center gap-1 ${st.color}`}>
                           <st.icon className="w-3 h-3" /> {st.label}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 pr-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <button onClick={() => openEdit(p)}
                             className="p-1.5 rounded-lg hover:bg-white/[0.04] text-white/20 hover:text-neon-cyan transition-all">
@@ -280,6 +360,34 @@ export default function MerendaPage() {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass-card px-4 py-3 rounded-2xl border border-neon-cyan/20 flex items-center gap-3 shadow-2xl shadow-neon-cyan/5">
+            <span className="text-xs text-white/60 font-mono">{selected.size} selecionado(s)</span>
+            <div className="w-px h-5 bg-white/[0.06]" />
+            <select value={batchCat} onChange={(e) => setBatchCat(e.target.value)}
+              className="input-neon !bg-dark-900 text-xs py-1.5 px-2 w-32">
+              <option value="">Mover para...</option>
+              {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <button onClick={batchUpdateCategory} disabled={!batchCat}
+              className="text-xs px-3 py-1.5 rounded-lg border border-white/[0.06] text-white/40 hover:text-white/70 hover:border-white/20 transition-colors disabled:opacity-30">
+              <Layers className="w-3 h-3" /> Alterar
+            </button>
+            <div className="w-px h-5 bg-white/[0.06]" />
+            <button onClick={batchDelete}
+              className="text-xs px-3 py-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
+              <Trash2 className="w-3 h-3" /> Excluir
+            </button>
+            <div className="w-px h-5 bg-white/[0.06]" />
+            <button onClick={clearSelection} className="text-xs text-white/20 hover:text-white/50 transition-colors">
+              <X className="w-3 h-3" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
