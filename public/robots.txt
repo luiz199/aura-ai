@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://aura-ai-six-mu.vercel.app/sitemap.xml

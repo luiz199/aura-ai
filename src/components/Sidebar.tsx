@@ -5,30 +5,25 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/context/AppContext"
 import {
   LayoutDashboard, MessageSquareText, History, Heart,
   BarChart3, Settings, ChevronLeft, PanelRightOpen, Sparkles,
-  Bot, Globe, FileText, Mic,
+  Bot, Globe, FileText, Mic, LogOut,
 } from "lucide-react"
 
 const LINKS = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/chat", icon: MessageSquareText, label: "Chat Inteligente" },
-  { href: "/dashboard/historico", icon: History, label: "Histórico" },
-  { href: "/dashboard/favoritos", icon: Heart, label: "Favoritos" },
-  { href: "/dashboard/estatisticas", icon: BarChart3, label: "Estatísticas" },
-  { href: "/dashboard/configuracoes", icon: Settings, label: "Configurações" },
-]
-
-const QUICK_ACTIONS = [
-  { icon: Bot, label: "IA de Texto", color: "text-neon-cyan" },
-  { icon: Mic, label: "Assistente de Voz", color: "text-neon-purple" },
-  { icon: Globe, label: "Tradução", color: "text-neon-green" },
-  { icon: FileText, label: "Resumos", color: "text-neon-cyan" },
+  { href: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
+  { href: "/dashboard/chat", icon: MessageSquareText, key: "chat" },
+  { href: "/dashboard/historico", icon: History, key: "historico" },
+  { href: "/dashboard/favoritos", icon: Heart, key: "favoritos" },
+  { href: "/dashboard/estatisticas", icon: BarChart3, key: "estatisticas" },
+  { href: "/dashboard/configuracoes", icon: Settings, key: "configuracoes" },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { t, user, logout } = useApp()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -37,8 +32,9 @@ export default function Sidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden glass p-2.5 rounded-xl"
+        className="fixed top-4 left-4 z-50 lg:hidden glass p-3 rounded-xl"
         aria-label="Abrir menu"
+        aria-expanded={mobileOpen}
       >
         <PanelRightOpen className="w-5 h-5 text-white/70" />
       </button>
@@ -76,7 +72,7 @@ export default function Sidebar() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="ml-3 text-sm font-bold text-gradient tracking-wide"
             >
-              AURA
+              {t?.app?.name || "AURA"}
             </motion.span>
           )}
         </div>
@@ -85,6 +81,7 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="hidden lg:flex absolute -right-3 top-16 w-6 h-6 rounded-full glass items-center justify-center text-white/30 hover:text-white/60 transition-colors z-10"
+          aria-label={collapsed ? "Expandir" : "Recolher"}
         >
           <ChevronLeft className={cn("w-3 h-3 transition-transform", collapsed && "rotate-180")} />
         </button>
@@ -96,7 +93,7 @@ export default function Sidebar() {
             return (
               <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}>
                 <div className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative min-h-[44px]",
                   collapsed && "justify-center px-0",
                   isActive
                     ? "bg-white/[0.04] text-white"
@@ -111,7 +108,7 @@ export default function Sidebar() {
                     />
                   )}
                   <link.icon className={cn("w-[18px] h-[18px] relative z-10", isActive ? "text-neon-cyan" : "")} />
-                  {!collapsed && <span className="text-sm relative z-10">{link.label}</span>}
+                  {!collapsed && <span className="text-sm relative z-10">{t?.nav?.[link.key as keyof typeof t.nav] || link.key}</span>}
                   {isActive && !collapsed && (
                     <div className="w-1 h-1 rounded-full bg-neon-cyan ml-auto relative z-10 glow-dot" />
                   )}
@@ -121,20 +118,18 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Quick actions */}
-        {!collapsed && (
-          <div className="px-3 py-3 border-t border-white/[0.04]">
-            <p className="text-[10px] text-white/20 uppercase tracking-widest mb-2 font-mono px-1">Acesso Rápido</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {QUICK_ACTIONS.map((action) => (
-                <button key={action.label} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg glass-hover text-[11px] text-white/40 hover:text-white/70 transition-all">
-                  <action.icon className={cn("w-3 h-3", action.color)} />
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Logout */}
+        <div className="px-2 pb-4">
+          <button onClick={logout}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-white/20 hover:text-neon-pink hover:bg-white/[0.02] w-full min-h-[44px]",
+              collapsed && "justify-center px-0",
+            )}
+          >
+            <LogOut className="w-[18px] h-[18px]" />
+            {!collapsed && <span className="text-sm">Sair</span>}
+          </button>
+        </div>
       </motion.aside>
     </>
   )

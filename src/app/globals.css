@@ -22,6 +22,64 @@
   --animate-aurora: aurora 8s ease-in-out infinite alternate;
 }
 
+/* Light theme */
+.light {
+  --color-dark-900: #f8f9fc;
+  --color-dark-800: #f0f1f5;
+  --color-dark-700: #e8e9ef;
+  --color-dark-600: #dcdde3;
+  --color-dark-500: #d0d1d7;
+  --color-glass: rgba(0, 0, 0, 0.03);
+  --color-glass-border: rgba(0, 0, 0, 0.06);
+  --color-glass-hover: rgba(0, 0, 0, 0.05);
+}
+
+.light body {
+  color: #1a1a2e;
+  background: #f8f9fc;
+}
+
+.light .glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.light .input-neon {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1a1a2e;
+}
+
+.light .input-neon:focus {
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.light .input-neon::placeholder {
+  color: rgba(0, 0, 0, 0.2);
+}
+
+/* Matrix theme */
+.matrix {
+  --color-neon-cyan: #00FF41;
+  --color-neon-purple: #00FF41;
+  --color-neon-green: #00FF41;
+  --color-neon-pink: #FF3D71;
+}
+
+/* Royal theme */
+.royal {
+  --color-neon-cyan: #7C3AED;
+  --color-neon-purple: #EC4899;
+  --color-neon-green: #7C3AED;
+  --color-neon-pink: #EC4899;
+}
+
 @keyframes glow {
   0% { box-shadow: 0 0 20px rgba(0, 229, 255, 0.1), 0 0 40px rgba(123, 97, 255, 0.05); }
   100% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.2), 0 0 60px rgba(123, 97, 255, 0.1), 0 0 80px rgba(0, 255, 163, 0.05); }
@@ -211,6 +269,48 @@
   border-radius: 50%;
   background: #7B61FF;
   box-shadow: 0 0 10px #7B61FF, 0 0 20px rgba(123, 97, 255, 0.3);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Prose styles for chat markdown */
+.prose pre {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.prose code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+.prose p {
+  margin-bottom: 0.75rem;
+}
+
+.prose ul, .prose ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.25rem;
+}
+
+.prose strong {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .chip-status {

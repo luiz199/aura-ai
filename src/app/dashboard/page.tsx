@@ -1,19 +1,14 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/context/AppContext"
 import {
   MessageSquareText, Users, FileText, Clock, TrendingUp, Activity,
   Bot, Sparkles, ArrowUpRight, Zap,
 } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts"
-
-const stats = [
-  { label: "Conversas Hoje", value: "1,247", change: "+12.5%", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-  { label: "Usuários Ativos", value: "3,891", change: "+8.2%", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
-  { label: "Documentos", value: "892", change: "+23.1%", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
-  { label: "Tempo Médio", value: "4.2min", change: "-2.1%", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-]
 
 const chartData = [
   { name: "Seg", conversas: 180, usuarios: 120, ia: 90 },
@@ -26,23 +21,39 @@ const chartData = [
 ]
 
 const recentActivity = [
-  { action: "Chat concluído", detail: "Análise de documento financeiro", time: "2 min atrás", icon: MessageSquareText, color: "text-neon-cyan" },
-  { action: "Tradução realizada", detail: "Português → Inglês (1,200 palavras)", time: "15 min atrás", icon: Bot, color: "text-neon-green" },
-  { action: "Resumo gerado", detail: "Artigo sobre Machine Learning", time: "32 min atrás", icon: FileText, color: "text-neon-purple" },
-  { action: "Código analisado", detail: "Python script otimizado", time: "1h atrás", icon: Activity, color: "text-neon-cyan" },
-  { action: "Voz convertida", detail: "Áudio para texto (8 min)", time: "2h atrás", icon: Zap, color: "text-neon-green" },
+  { action: "Chat conclu\u00eddo", detail: "An\u00e1lise de documento financeiro", time: "2 min atr\u00e1s", icon: MessageSquareText, color: "text-neon-cyan" },
+  { action: "Tradu\u00e7\u00e3o realizada", detail: "Portugu\u00eas \u2192 Ingl\u00eas (1,200 palavras)", time: "15 min atr\u00e1s", icon: Bot, color: "text-neon-green" },
+  { action: "Resumo gerado", detail: "Artigo sobre Machine Learning", time: "32 min atr\u00e1s", icon: FileText, color: "text-neon-purple" },
+  { action: "C\u00f3digo analisado", detail: "Python script otimizado", time: "1h atr\u00e1s", icon: Activity, color: "text-neon-cyan" },
+  { action: "Voz convertida", detail: "\u00c1udio para texto (8 min)", time: "2h atr\u00e1s", icon: Zap, color: "text-neon-green" },
 ]
 
 export default function DashboardPage() {
+  const { t } = useApp()
+  const [stats, setStats] = useState([
+    { label: t?.dashboard?.hoje || "Conversas Hoje", value: "1,247", change: "+12.5%", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+    { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: "3,891", change: "+8.2%", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
+    { label: t?.dashboard?.documentos || "Documentos", value: "892", change: "+23.1%", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
+    { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: "4.2min", change: "-2.1%", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+  ])
+
+  useEffect(() => {
+    setStats([
+      { label: t?.dashboard?.hoje || "Conversas Hoje", value: "1,247", change: "+12.5%", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+      { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: "3,891", change: "+8.2%", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
+      { label: t?.dashboard?.documentos || "Documentos", value: "892", change: "+23.1%", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
+      { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: "4.2min", change: "-2.1%", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+    ])
+  }, [t])
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-2xl sm:text-3xl font-bold text-gradient tracking-tight">
-          Dashboard
+          {t?.dashboard?.title || "Dashboard"}
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="text-sm text-white/30 mt-1">
-          Visão geral do seu assistente inteligente
+          {t?.dashboard?.subtitle || "Vis\u00e3o geral do seu assistente inteligente"}
         </motion.p>
       </div>
 

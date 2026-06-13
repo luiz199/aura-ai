@@ -1,10 +1,11 @@
 "use client"
 
 import { Toaster } from "react-hot-toast"
+import { AppProvider } from "@/context/AppContext"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <AppProvider>
       {children}
       <Toaster
         position="bottom-right"
@@ -20,6 +21,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           duration: 3000,
         }}
       />
-    </>
+    </AppProvider>
   )
 }

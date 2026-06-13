@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/context/AppContext"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import {
   Send, Bot, User, Sparkles, FileText, StopCircle, Mic, Image,
-  Code, Globe, BookOpen, ArrowUpRight,
+  Code, Globe, BookOpen, ArrowUpRight, Plus, Trash2,
 } from "lucide-react"
 
 type Message = { role: "user" | "assistant"; content: string; timestamp: Date }
@@ -25,8 +28,9 @@ const quickReplies = [
 ]
 
 export default function ChatPage() {
+  const { t } = useApp()
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Olá! Sou a AURA, sua assistente de IA. Como posso ajudá-lo hoje?", timestamp: new Date() },
+    { role: "assistant", content: "Ol\u00e1! Sou a AURA, sua assistente de IA. Como posso ajud\u00e1-lo hoje?", timestamp: new Date() },
   ])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
@@ -36,40 +40,57 @@ export default function ChatPage() {
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   useEffect(() => { scrollToBottom() }, [messages])
 
-  const handleSend = async (text?: string) => {
+  const newChat = () => setMessages([
+    { role: "assistant", content: "Ol\u00e1! Sou a AURA, sua assistente de IA. Como posso ajud\u00e1-lo hoje?", timestamp: new Date() },
+  ])
+
+  const handleSend = useCallback(async (text?: string) => {
     const msg = text || input
     if (!msg.trim() || isTyping) return
     setInput("")
     setMessages((prev) => [...prev, { role: "user", content: msg, timestamp: new Date() }])
     setIsTyping(true)
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        "explique machine learning": "Machine Learning \u00e9 uma sub\u00e1rea da Intelig\u00eancia Artificial que permite que sistemas aprendam padr\u00f5es a partir de dados, sem serem explicitamente programados. Os principais tipos s\u00e3o: Aprendizado Supervisionado, N\u00e3o Supervisionado e por Refor\u00e7o. Exemplos incluem: classifica\u00e7\u00e3o de emails, recomenda\u00e7\u00e3o de produtos e carros aut\u00f4nomos.",
-        "crie uma fun\u00e7\u00e3o para ordenar array": "Claro! Aqui est\u00e1 uma implementa\u00e7\u00e3o do Quick Sort em JavaScript:\n\n```javascript\nfunction quickSort(arr) {\n  if (arr.length <= 1) return arr;\n  const pivot = arr[Math.floor(arr.length / 2)];\n  const left = arr.filter(x => x < pivot);\n  const middle = arr.filter(x => x === pivot);\n  const right = arr.filter(x => x > pivot);\n  return [...quickSort(left), ...middle, ...right];\n}\n```\n\nComplexidade: O(n log n) no caso m\u00e9dio.",
-        "resuma como funciona react": "React \u00e9 uma biblioteca JavaScript para construir interfaces de usu\u00e1rio. Seus conceitos principais:\n\n1. **Componentes**: Blocos reutiliz\u00e1veis de UI\n2. **JSX**: Sintaxe que combina HTML e JavaScript\n3. **Estado (State)**: Dados que podem mudar ao longo do tempo\n4. **Props**: Dados passados entre componentes\n5. **Virtual DOM**: Atualiza\u00e7\u00f5es eficientes da interface\n\nReact permite criar SPAs, sites e apps mobile (React Native) com performance e escalabilidade.",
-        "traduza 'hello world' para portugu\u00eas": '"Hello World" traduzido para o portugu\u00eas \u00e9 **"Ol\u00e1, Mundo!"** \uD83C\uDF89\n\n\u00c9 tradicionalmente usado como o primeiro programa ao aprender uma nova linguagem de programa\u00e7\u00e3o.',
-      }
-      const lower = msg.toLowerCase().trim()
-      const response = Object.entries(responses).find(([key]) => lower.includes(key))
+
+    try {
+      const token = localStorage.getItem("aura_token")
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          message: msg,
+          history: messages.slice(-10),
+        }),
+      })
+      const data = await res.json()
       setMessages((prev) => [...prev, {
         role: "assistant",
-        content: response ? response[1] : "Obrigado pela sua pergunta! Sou uma IA projetada para ajudar com an\u00e1lises, programa\u00e7\u00e3o, tradu\u00e7\u00f5es, resumos e muito mais. Poderia fornecer mais detalhes para que eu possa ajud\u00e1-lo melhor?",
+        content: data.response || data.error || "Desculpe, houve um erro.",
         timestamp: new Date(),
       }])
+    } catch {
+      setMessages((prev) => [...prev, {
+        role: "assistant",
+        content: "Erro de conex\u00e3o. Verifique sua internet e tente novamente.",
+        timestamp: new Date(),
+      }])
+    } finally {
       setIsTyping(false)
-    }, 1500 + Math.random() * 1000)
-  }
+    }
+  }, [input, isTyping, messages])
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] sm:h-[calc(100vh-4rem)]">
       {/* Chat header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gradient tracking-tight">Chat Inteligente</h1>
-          <p className="text-xs text-white/30 mt-0.5">Converse com a IA em tempo real</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gradient tracking-tight">{t?.chat?.title || "Chat Inteligente"}</h1>
+          <p className="text-xs text-white/30 mt-0.5">{t?.chat?.subtitle || "Converse com a IA em tempo real"}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-[11px] text-neon-green/60"><span className="w-1.5 h-1.5 rounded-full bg-neon-green glow-dot-green" /> Online</span>
+          <button onClick={newChat} className="btn-neon text-xs px-3 py-1.5" aria-label="Novo Chat">
+            <Plus className="w-3 h-3" /> {t?.chat?.novo || "Novo"}
+          </button>
+          <span className="flex items-center gap-1.5 text-[11px] text-neon-green/60"><span className="w-1.5 h-1.5 rounded-full bg-neon-green glow-dot-green" /> {t?.chat?.online || "Online"}</span>
         </div>
       </div>
 
@@ -96,7 +117,9 @@ export default function ChatPage() {
                       ? "bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 border border-white/[0.06] text-white/90"
                       : "glass text-white/80",
                   )}>
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div className="prose prose-invert prose-sm max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    </div>
                     <p className="text-[10px] text-white/20 mt-2 text-right font-mono">
                       {msg.timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
