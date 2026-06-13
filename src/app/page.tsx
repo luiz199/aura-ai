@@ -157,7 +157,7 @@ export default function Home() {
           <div className="bg-dark-800/30 backdrop-blur-xl p-1 rounded-xl flex mb-4 border border-white/[0.04]">
             {(["login", "register"] as const).map((t) => (
               <button key={t} onClick={() => { setTab(t); setShowPassword(false); setShowRegPassword(false) }}
-                className="flex-1 text-xs py-2 rounded-lg font-medium transition-all duration-200 relative">
+                className="flex-1 text-xs py-2.5 min-h-[44px] rounded-lg font-medium transition-all duration-200 relative">
                 {tab === t && (
                   <motion.div layoutId="tab-bg"
                     className="absolute inset-0 rounded-lg bg-white/[0.04] border border-white/[0.06]"

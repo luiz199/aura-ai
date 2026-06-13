@@ -334,10 +334,10 @@ export default function ChatPage() {
                         {new Date(msg.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                       </p>
                       <button onClick={() => copyMessage(msg.content, `${i}`)}
-                        className="p-1 rounded hover:bg-white/[0.04] text-white/20 hover:text-neon-cyan transition-all"
+                        className="p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center rounded hover:bg-white/[0.04] text-white/20 hover:text-neon-cyan transition-all"
                         aria-label="Copiar mensagem"
                       >
-                        {copiedId === `${i}` ? <Check className="w-3 h-3 text-neon-green" /> : <Copy className="w-3 h-3" />}
+                        {copiedId === `${i}` ? <Check className="w-3.5 h-3.5 text-neon-green" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
@@ -372,13 +372,13 @@ export default function ChatPage() {
           {/* Input */}
           <div className="glass rounded-2xl p-1.5 flex items-center gap-2 border border-white/[0.06]">
             <button onClick={toggleVoice}
-              className={cn("p-2.5 rounded-xl transition-all", isListening ? "bg-neon-pink/20 text-neon-pink" : "hover:bg-white/[0.04] text-white/20 hover:text-white/50")}
+              className={cn("p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl transition-all", isListening ? "bg-neon-pink/20 text-neon-pink" : "hover:bg-white/[0.04] text-white/20 hover:text-white/50")}
               aria-label={isListening ? "Parar grava\u00e7\u00e3o" : "Comando de voz"}
             >
-              {isListening ? <StopCircle className="w-4 h-4 animate-pulse" /> : <Mic className="w-4 h-4" />}
+              {isListening ? <StopCircle className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
             <button onClick={handleImageUpload}
-              className="p-2.5 rounded-xl hover:bg-white/[0.04] text-white/20 hover:text-white/50 transition-all"
+              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-white/[0.04] text-white/20 hover:text-white/50 transition-all"
               aria-label="Enviar imagem"
             >
               <Image className="w-4 h-4" />
@@ -393,7 +393,7 @@ export default function ChatPage() {
               <span className="hidden sm:block text-[10px] text-white/10 font-mono">Ctrl+Enter</span>
               <button onClick={() => handleSend()}
                 disabled={!input.trim() || isTyping}
-                className="p-2.5 rounded-xl bg-gradient-to-r from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/20 text-neon-cyan hover:shadow-[0_0_20px_rgba(0,229,255,0.1)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-gradient-to-r from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/20 text-neon-cyan hover:shadow-[0_0_20px_rgba(0,229,255,0.1)] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {isTyping ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
               </button>

@@ -49,7 +49,7 @@ export default function Sidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden glass p-3 rounded-xl"
+        className="fixed top-4 left-4 z-50 lg:hidden glass p-3 rounded-xl min-h-[48px] min-w-[48px] flex items-center justify-center"
         aria-label="Abrir menu"
         aria-expanded={mobileOpen}
       >
