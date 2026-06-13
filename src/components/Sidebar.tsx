@@ -9,7 +9,7 @@ import { useApp } from "@/context/AppContext"
 import {
   LayoutDashboard, MessageSquareText, History, Heart,
   BarChart3, Settings, ChevronLeft, PanelRightOpen, Sparkles,
-  Bot, Globe, FileText, Mic, LogOut,
+  Bot, Globe, FileText, Mic, LogOut, Shield,
 } from "lucide-react"
 
 const LINKS = [
@@ -18,6 +18,7 @@ const LINKS = [
   { href: "/dashboard/historico", icon: History, key: "historico" },
   { href: "/dashboard/favoritos", icon: Heart, key: "favoritos" },
   { href: "/dashboard/estatisticas", icon: BarChart3, key: "estatisticas" },
+  { href: "/dashboard/admin", icon: Shield, key: "admin" },
   { href: "/dashboard/configuracoes", icon: Settings, key: "configuracoes" },
 ]
 

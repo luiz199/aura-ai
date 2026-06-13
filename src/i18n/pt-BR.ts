@@ -11,6 +11,7 @@ const ptBR = {
     favoritos: "Favoritos",
     estatisticas: "Estat\u00edsticas",
     configuracoes: "Configura\u00e7\u00f5es",
+    admin: "Admin",
   },
   dashboard: {
     title: "Dashboard",

@@ -11,6 +11,7 @@ const enUS = {
     favoritos: "Favorites",
     estatisticas: "Statistics",
     configuracoes: "Settings",
+    admin: "Admin",
   },
   dashboard: {
     title: "Dashboard",

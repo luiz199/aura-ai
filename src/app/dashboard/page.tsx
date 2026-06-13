@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
+import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
+import { CountUp } from "@/components/ui/CountUp"
 import {
   MessageSquareText, Users, FileText, Clock, TrendingUp, Activity,
-  Bot, Sparkles, ArrowUpRight, Zap,
+  Bot, Sparkles, ArrowUpRight,
 } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts"
 
@@ -16,38 +18,43 @@ const chartData = [
   { name: "Qua", conversas: 190, usuarios: 130, ia: 95 },
   { name: "Qui", conversas: 260, usuarios: 170, ia: 130 },
   { name: "Sex", conversas: 240, usuarios: 160, ia: 120 },
-  { name: "Sáb", conversas: 150, usuarios: 90, ia: 70 },
+  { name: "S\u00e1b", conversas: 150, usuarios: 90, ia: 70 },
   { name: "Dom", conversas: 170, usuarios: 100, ia: 80 },
-]
-
-const recentActivity = [
-  { action: "Chat conclu\u00eddo", detail: "An\u00e1lise de documento financeiro", time: "2 min atr\u00e1s", icon: MessageSquareText, color: "text-neon-cyan" },
-  { action: "Tradu\u00e7\u00e3o realizada", detail: "Portugu\u00eas \u2192 Ingl\u00eas (1,200 palavras)", time: "15 min atr\u00e1s", icon: Bot, color: "text-neon-green" },
-  { action: "Resumo gerado", detail: "Artigo sobre Machine Learning", time: "32 min atr\u00e1s", icon: FileText, color: "text-neon-purple" },
-  { action: "C\u00f3digo analisado", detail: "Python script otimizado", time: "1h atr\u00e1s", icon: Activity, color: "text-neon-cyan" },
-  { action: "Voz convertida", detail: "\u00c1udio para texto (8 min)", time: "2h atr\u00e1s", icon: Zap, color: "text-neon-green" },
 ]
 
 export default function DashboardPage() {
   const { t } = useApp()
-  const [stats, setStats] = useState([
-    { label: t?.dashboard?.hoje || "Conversas Hoje", value: "1,247", change: "+12.5%", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-    { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: "3,891", change: "+8.2%", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
-    { label: t?.dashboard?.documentos || "Documentos", value: "892", change: "+23.1%", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
-    { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: "4.2min", change: "-2.1%", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-  ])
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>(null)
 
   useEffect(() => {
-    setStats([
-      { label: t?.dashboard?.hoje || "Conversas Hoje", value: "1,247", change: "+12.5%", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-      { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: "3,891", change: "+8.2%", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
-      { label: t?.dashboard?.documentos || "Documentos", value: "892", change: "+23.1%", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
-      { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: "4.2min", change: "-2.1%", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-    ])
-  }, [t])
+    (async () => {
+      try {
+        const token = localStorage.getItem("aura_token")
+        const res = await fetch("/api/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) setData(await res.json())
+      } catch {} finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
+
+  const stats = [
+    { label: t?.dashboard?.hoje || "Conversas Hoje", value: data?.conversasHoje ?? "1,247", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+    { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: data?.totalUsers ?? "3,891", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
+    { label: t?.dashboard?.documentos || "Documentos", value: data?.totalDocumentos ?? "892", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
+    { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: data?.tempoMedio ?? "4.2min", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+  ]
+
+  const recentActivity = data?.recentes || [
+    { acao: "Chat conclu\u00eddo", detalhe: "An\u00e1lise de documento financeiro", tempo: "2 min atr\u00e1s" },
+    { acao: "Tradu\u00e7\u00e3o realizada", detalhe: "Portugu\u00eas \u2192 Ingl\u00eas", tempo: "15 min atr\u00e1s" },
+  ]
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-2xl sm:text-3xl font-bold text-gradient tracking-tight">
           {t?.dashboard?.title || "Dashboard"}
@@ -57,36 +64,34 @@ export default function DashboardPage() {
         </motion.p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-            className={cn("glass-card p-4 sm:p-5 border-l-2", stat.border)}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className={cn("p-2 rounded-xl bg-gradient-to-br", stat.color)}>
-                <stat.icon className="w-4 h-4 text-white/70" />
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {stats.map((stat, i) => (
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+              className={cn("glass-card p-4 sm:p-5 border-l-2", stat.border)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={cn("p-2 rounded-xl bg-gradient-to-br", stat.color)}>
+                  <stat.icon className="w-4 h-4 text-white/70" />
+                </div>
               </div>
-              <span className={cn("text-[11px] font-mono flex items-center gap-0.5", stat.change.startsWith("+") ? "text-neon-green" : "text-neon-pink")}>
-                {stat.change} <ArrowUpRight className="w-2.5 h-2.5" />
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-white tracking-tight">{stat.value}</p>
-            <p className="text-xs text-white/30 mt-0.5">{stat.label}</p>
-          </motion.div>
-        ))}
-      </div>
+              <p className="text-2xl font-bold text-white tracking-tight">
+                {typeof stat.value === "number" ? <CountUp end={stat.value} /> : stat.value}
+              </p>
+              <p className="text-xs text-white/30 mt-0.5">{stat.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="glass-card p-5 sm:p-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-5 sm:p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white/80">Atividade Semanal</h3>
+            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.semanal || "Atividade Semanal"}</h3>
             <div className="flex items-center gap-4 text-[11px]">
               <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-cyan" /> Conversas</span>
               <span className="flex items-center gap-1.5 text-white/40"><span className="w-2 h-2 rounded-full bg-neon-purple" /> IA</span>
@@ -106,12 +111,9 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-          className="glass-card p-5 sm:p-6"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card p-5 sm:p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-semibold text-white/80">Usuários por Dia</h3>
+            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.usuariosDia || "Usu\u00e1rios por Dia"}</h3>
             <TrendingUp className="w-4 h-4 text-white/20" />
           </div>
           <div className="h-64 sm:h-72">
@@ -128,30 +130,30 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-        className="glass-card p-5 sm:p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-white/80">Atividade Recente</h3>
-          <Sparkles className="w-4 h-4 text-neon-cyan/50" />
-        </div>
-        <div className="space-y-2">
-          {recentActivity.map((item, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl glass-hover transition-all">
-              <div className={cn("p-2 rounded-lg bg-white/[0.03]", item.color)}>
-                <item.icon className="w-3.5 h-3.5" />
+      {loading ? (
+        <TableSkeleton rows={4} />
+      ) : (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.recente || "Atividade Recente"}</h3>
+            <Sparkles className="w-4 h-4 text-neon-cyan/50" />
+          </div>
+          <div className="space-y-2">
+            {recentActivity.map((item: any, i: number) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl glass-hover transition-all">
+                <div className="p-2 rounded-lg bg-white/[0.03] text-neon-cyan">
+                  <MessageSquareText className="w-3.5 h-3.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/70 truncate">{item.acao}</p>
+                  <p className="text-xs text-white/30 truncate">{item.detalhe}</p>
+                </div>
+                <span className="text-[10px] text-white/20 font-mono flex-shrink-0">{item.tempo}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/70 truncate">{item.action}</p>
-                <p className="text-xs text-white/30 truncate">{item.detail}</p>
-              </div>
-              <span className="text-[10px] text-white/20 font-mono flex-shrink-0">{item.time}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }

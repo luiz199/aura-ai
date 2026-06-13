@@ -11,6 +11,7 @@ const esES = {
     favoritos: "Favoritos",
     estatisticas: "Estad\u00edsticas",
     configuracoes: "Ajustes",
+    admin: "Admin",
   },
   dashboard: {
     title: "Panel",
