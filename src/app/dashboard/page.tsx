@@ -5,23 +5,23 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
-import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
+import { CardSkeleton } from "@/components/ui/Skeleton"
 import { CountUp } from "@/components/ui/CountUp"
 import {
-  MessageSquareText, Users, FileText, Clock, TrendingUp,
+  MessageSquareText, Users, Package, Clock, TrendingUp,
   Apple, AlertTriangle, ChevronRight,
 } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts"
 import toast from "react-hot-toast"
 
-const chartData = [
-  { name: "Seg", conversas: 180, usuarios: 120, ia: 90 },
-  { name: "Ter", conversas: 220, usuarios: 150, ia: 110 },
-  { name: "Qua", conversas: 190, usuarios: 130, ia: 95 },
-  { name: "Qui", conversas: 260, usuarios: 170, ia: 130 },
-  { name: "Sex", conversas: 240, usuarios: 160, ia: 120 },
-  { name: "S\u00e1b", conversas: 150, usuarios: 90, ia: 70 },
-  { name: "Dom", conversas: 170, usuarios: 100, ia: 80 },
+const defaultChartData = [
+  { name: "Seg", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "Ter", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "Qua", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "Qui", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "Sex", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "S\u00e1b", conversas: 0, usuarios: 0, ia: 0 },
+  { name: "Dom", conversas: 0, usuarios: 0, ia: 0 },
 ]
 
 function getStatus(d: string) {
@@ -69,11 +69,13 @@ export default function DashboardPage() {
     })()
   }, [])
 
+  const chartData = data?.chartData || defaultChartData
+
   const stats = [
-    { label: t?.dashboard?.hoje || "Conversas Hoje", value: data?.conversasHoje ?? "1,247", icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-    { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: data?.totalUsers ?? "3,891", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
-    { label: t?.dashboard?.documentos || "Documentos", value: data?.totalDocumentos ?? "892", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
-    { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: data?.tempoMedio ?? "4.2min", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+    { label: "Conversas Hoje", value: data?.conversasHoje ?? 0, icon: MessageSquareText, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
+    { label: "Total de Conversas", value: data?.totalConversas ?? 0, icon: MessageSquareText, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
+    { label: "Produtos na Merenda", value: data?.totalProdutos ?? 0, icon: Package, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
+    { label: "Tempo M\u00e9dio", value: data?.tempoMedio || "\u2014", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
   ]
 
   return (
@@ -137,7 +139,7 @@ export default function DashboardPage() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card p-5 sm:p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.usuariosDia || "Usu\u00e1rios por Dia"}</h3>
+              <h3 className="text-sm font-semibold text-white/80">Respostas por Dia</h3>
               <TrendingUp className="w-4 h-4 text-white/20" />
             </div>
             <div className="h-64 sm:h-72">
@@ -147,7 +149,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "rgba(255,255,255,0.2)", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ background: "rgba(10,11,30,0.95)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }} />
-                  <Bar dataKey="usuarios" fill="#00FFA3" radius={[4, 4, 0, 0]} opacity={0.6} />
+                  <Bar dataKey="ia" fill="#00FFA3" radius={[4, 4, 0, 0]} opacity={0.6} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
