@@ -4,34 +4,46 @@ import { requireAuth } from "@/lib/auth"
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"]
+
 async function analyzeWithGemini(imageBase64: string): Promise<string> {
   const imageData = imageBase64.replace(/^data:image\/\w+;base64,/, "")
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: "Analise esta imagem em detalhes. Descreva o que você vê, incluindo objetos, cores, texto, e contexto. Responda em português." },
-            { inline_data: { mime_type: "image/jpeg", data: imageData } },
-          ],
-        }],
-        generationConfig: { temperature: 0.5, maxOutputTokens: 1024 },
-      }),
-    },
-  )
+  let lastErr: Error | null = null
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: "Analise esta imagem em detalhes. Descreva o que você vê, incluindo objetos, cores, texto, e contexto. Responda em português." },
+                { inline_data: { mime_type: "image/jpeg", data: imageData } },
+              ],
+            }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 1024 },
+          }),
+        },
+      )
 
-  if (!res.ok) {
-    const text = await res.text()
-    console.error("Gemini vision error:", res.status, text)
-    throw new Error(`Gemini vision: ${res.status} ${text}`)
+      if (!res.ok) {
+        const text = await res.text()
+        console.warn(`Gemini vision ${model} error:`, res.status, text.slice(0, 500))
+        lastErr = new Error(`${model}: ${res.status} ${text.slice(0, 200)}`)
+        continue
+      }
+
+      const data = await res.json()
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível analisar a imagem."
+    } catch (e) {
+      lastErr = e as Error
+    }
   }
 
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível analisar a imagem."
+  throw lastErr || new Error("Todos os modelos Gemini vision falharam")
 }
 
 export async function POST(request: NextRequest) {

@@ -19,29 +19,41 @@ const SYSTEM_PROMPT =
   "- Recomendar prioridades com base nos prazos de validade\n" +
   "- Analisar tend\u00eancias com base no hist\u00f3rico de conversas"
 
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"]
+
 async function askGemini(messages: { role: string; content: string }[]) {
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }))
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } }),
-    },
-  )
+  let lastErr: Error | null = null
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } }),
+        },
+      )
 
-  if (!res.ok) {
-    const text = await res.text()
-    console.error("Gemini error:", res.status, text)
-    throw new Error(`Gemini: ${res.status} ${text}`)
+      if (!res.ok) {
+        const text = await res.text()
+        console.warn(`Gemini ${model} error:`, res.status, text.slice(0, 500))
+        lastErr = new Error(`${model}: ${res.status} ${text.slice(0, 200)}`)
+        continue
+      }
+
+      const data = await res.json()
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta."
+    } catch (e) {
+      lastErr = e as Error
+    }
   }
 
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta."
+  throw lastErr || new Error("Todos os modelos Gemini falharam")
 }
 
 async function askOpenAI(messages: { role: string; content: string }[]) {
@@ -94,7 +106,7 @@ export async function POST(request: NextRequest) {
       try {
         response = await askGemini(messages)
       } catch (geminiErr) {
-        console.warn("Gemini falhou:", geminiErr)
+        console.warn("Gemini falhou:", (geminiErr as Error).message)
         if (OPENAI_API_KEY) {
           try {
             response = await askOpenAI(messages)
