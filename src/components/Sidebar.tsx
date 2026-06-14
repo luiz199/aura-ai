@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/context/AppContext"
 import {
-  LayoutDashboard, MessageSquareText, History, Heart,
+  LayoutDashboard, MessageSquareText,
   BarChart3, Settings, ChevronLeft, PanelRightOpen, Sparkles,
   Bot, Globe, FileText, Mic, LogOut, Shield, Apple,
 } from "lucide-react"
@@ -15,8 +15,6 @@ import {
 const LINKS = [
   { href: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/dashboard/chat", icon: MessageSquareText, key: "chat" },
-  { href: "/dashboard/historico", icon: History, key: "historico" },
-  { href: "/dashboard/favoritos", icon: Heart, key: "favoritos" },
   { href: "/dashboard/estatisticas", icon: BarChart3, key: "estatisticas" },
   { href: "/dashboard/merenda", icon: Apple, key: "merenda", alerta: true },
   { href: "/dashboard/admin", icon: Shield, key: "admin" },
