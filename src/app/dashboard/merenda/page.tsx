@@ -7,6 +7,7 @@ import {
   Package, Plus, Trash2, Edit3, FileDown, AlertTriangle,
   Clock, CheckCircle, X, Search, Square, CheckSquare,
   ChevronDown, Layers, FileJson, FileText, Download, Upload,
+  MoreHorizontal,
 } from "lucide-react"
 import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
 import toast from "react-hot-toast"
@@ -58,12 +59,15 @@ export default function MerendaPage() {
   const [importing, setImporting] = useState(false)
   const [showDeleteAll, setShowDeleteAll] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [showActions, setShowActions] = useState(false)
   const selectAllRef = useRef<HTMLInputElement>(null)
   const exportRef = useRef<HTMLDivElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (exportRef.current && !exportRef.current.contains(e.target as Node)) setShowExport(false)
+      if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) setShowActions(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -267,41 +271,71 @@ export default function MerendaPage() {
           <p className="text-sm text-white/30 mt-1">Gest\u00e3o de produtos e validades</p>
         </div>
         <div className="flex gap-2">
-          <div className="relative" ref={exportRef}>
-            <button onClick={() => setShowExport(!showExport)}
-              className="btn-neon text-xs px-4 py-2">
-              <FileDown className="w-3 h-3" /> Exportar <ChevronDown className="w-3 h-3 ml-1" />
+          {/* Mobile: single actions button */}
+          <div className="relative sm:hidden" ref={actionsRef}>
+            <button onClick={() => setShowActions(!showActions)}
+              className="btn-neon px-3 py-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <MoreHorizontal className="w-4 h-4" />
             </button>
             <AnimatePresence>
-              {showExport && (
+              {showActions && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                  className="absolute right-0 mt-2 w-36 glass-card p-1 rounded-xl z-50">
-                  {[
-                    { label: "PDF", format: "pdf" as const },
-                    { label: "CSV", format: "csv" as const },
-                    { label: "JSON", format: "json" as const },
-                  ].map((opt) => (
-                    <button key={opt.format} onClick={() => downloadFile(opt.format)}
-                      className="flex items-center gap-2 w-full text-xs text-white/60 hover:text-white hover:bg-white/[0.04] px-3 py-2 rounded-lg transition-colors">
-                      {opt.format === "pdf" ? <FileDown className="w-3.5 h-3.5" />
-                        : opt.format === "csv" ? <FileText className="w-3.5 h-3.5" />
-                        : <FileJson className="w-3.5 h-3.5" />}
-                      {opt.label}
-                    </button>
-                  ))}
+                  className="absolute right-0 mt-2 w-44 glass-card p-1 rounded-xl z-50 shadow-2xl">
+                  <button onClick={() => { setShowActions(false); openNew() }}
+                    className="flex items-center gap-3 w-full text-xs text-white/70 hover:text-white hover:bg-white/[0.04] px-3 py-3 rounded-lg transition-colors">
+                    <Plus className="w-4 h-4" /> Novo Produto
+                  </button>
+                  <button onClick={() => { setShowActions(false); setShowImport(true) }}
+                    className="flex items-center gap-3 w-full text-xs text-white/70 hover:text-white hover:bg-white/[0.04] px-3 py-3 rounded-lg transition-colors">
+                    <Upload className="w-4 h-4" /> Importar
+                  </button>
+                  <button onClick={() => { setShowActions(false); setShowDeleteAll(true) }}
+                    className="flex items-center gap-3 w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-3 rounded-lg transition-colors">
+                    <Trash2 className="w-4 h-4" /> Deletar Tudo
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <button onClick={() => setShowImport(true)} className="btn-neon text-xs px-4 py-2">
-            <Upload className="w-3 h-3" /> Importar
-          </button>
-          <button onClick={() => setShowDeleteAll(true)} className="btn-neon text-xs px-4 py-2 border-red-500/30 text-red-400 hover:bg-red-500/10">
-            <Trash2 className="w-3 h-3" /> Deletar Tudo
-          </button>
-          <button onClick={openNew} className="btn-neon text-xs px-4 py-2">
-            <Plus className="w-3 h-3" /> Novo Produto
-          </button>
+
+          {/* Desktop: individual buttons */}
+          <div className="hidden sm:flex gap-2">
+            <div className="relative" ref={exportRef}>
+              <button onClick={() => setShowExport(!showExport)}
+                className="btn-neon text-xs px-4 py-2">
+                <FileDown className="w-3 h-3" /> Exportar <ChevronDown className="w-3 h-3 ml-1" />
+              </button>
+              <AnimatePresence>
+                {showExport && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                    className="absolute right-0 mt-2 w-36 glass-card p-1 rounded-xl z-50">
+                    {[
+                      { label: "PDF", format: "pdf" as const },
+                      { label: "CSV", format: "csv" as const },
+                      { label: "JSON", format: "json" as const },
+                    ].map((opt) => (
+                      <button key={opt.format} onClick={() => downloadFile(opt.format)}
+                        className="flex items-center gap-2 w-full text-xs text-white/60 hover:text-white hover:bg-white/[0.04] px-3 py-3 rounded-lg transition-colors">
+                        {opt.format === "pdf" ? <FileDown className="w-3.5 h-3.5" />
+                          : opt.format === "csv" ? <FileText className="w-3.5 h-3.5" />
+                          : <FileJson className="w-3.5 h-3.5" />}
+                        {opt.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <button onClick={() => setShowImport(true)} className="btn-neon text-xs px-4 py-2">
+              <Upload className="w-3 h-3" /> Importar
+            </button>
+            <button onClick={() => setShowDeleteAll(true)} className="btn-neon text-xs px-4 py-2 border-red-500/30 text-red-400 hover:bg-red-500/10">
+              <Trash2 className="w-3 h-3" /> Deletar Tudo
+            </button>
+            <button onClick={openNew} className="btn-neon text-xs px-4 py-2">
+              <Plus className="w-3 h-3" /> Novo Produto
+            </button>
+          </div>
         </div>
       </div>
 
@@ -322,22 +356,24 @@ export default function MerendaPage() {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
-            className="input-neon pl-9 w-full" placeholder="Buscar produto..." />
+            className="input-neon pl-9 w-full h-[44px] sm:h-[42px]" placeholder="Buscar produto..." />
         </div>
-        {filtros.map((f) => (
-          <button key={f.key} onClick={() => { setFilterStatus(f.key); load(f.key) }}
-            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-              filterStatus === f.key
-                ? "border-neon-cyan/50 text-neon-cyan bg-neon-cyan/10"
-                : "border-white/[0.06] text-white/40 hover:border-white/20"
-            }`}>
-            {f.label}
-          </button>
-        ))}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-custom pb-1 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0">
+          {filtros.map((f) => (
+            <button key={f.key} onClick={() => { setFilterStatus(f.key); load(f.key) }}
+              className={`text-xs px-3 py-2 sm:py-1.5 rounded-lg border transition-colors whitespace-nowrap ${
+                filterStatus === f.key
+                  ? "border-neon-cyan/50 text-neon-cyan bg-neon-cyan/10"
+                  : "border-white/[0.06] text-white/40 hover:border-white/20"
+              }`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <AnimatePresence>
@@ -388,68 +424,120 @@ export default function MerendaPage() {
           <p className="text-white/30 text-sm">Nenhum produto encontrado</p>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] text-white/30 uppercase tracking-wider font-mono">
-                  <th className="py-3 pl-4 pr-2 w-10">
-                    <button onClick={toggleSelectAll} className="p-1" aria-label="Selecionar todos">
-                      {allFilteredSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" />
-                        : someFilteredSelected ? <ChevronDown className="w-4 h-4 text-white/40" />
-                        : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
-                    </button>
-                  </th>
-                  <th className="text-left py-3 pr-4">Produto</th>
-                  <th className="text-left py-3 pr-4 hidden sm:table-cell">Categoria</th>
-                  <th className="text-left py-3 pr-4">Validade</th>
-                  <th className="text-center py-3 pr-4">Qtd</th>
-                  <th className="text-left py-3 pr-4">Status</th>
-                  <th className="text-right py-3 pr-4">A\u00e7\u00e3o</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((p) => {
-                  const st = getStatus(p.expiryDate)
-                  const isSelected = selected.has(p.id)
-                  return (
-                    <tr key={p.id} onClick={() => toggleSelect(p.id)}
-                      className={`border-t border-white/[0.04] text-white/60 transition-colors cursor-pointer ${
-                        isSelected ? "bg-neon-cyan/[0.03]" : "hover:bg-white/[0.02]"
-                      }`}>
-                      <td className="py-3 pl-4 pr-2" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => toggleSelect(p.id)} className="p-1" aria-label="Selecionar">
-                          {isSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" /> : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
-                        </button>
-                      </td>
-                      <td className="py-3 pr-4 font-medium text-white/80">{p.nome}</td>
-                      <td className="py-3 pr-4 hidden sm:table-cell text-white/30">{p.categoria}</td>
-                      <td className="py-3 pr-4 text-white/40 text-[13px]">{new Date(p.expiryDate).toLocaleDateString("pt-BR")}</td>
-                      <td className="py-3 pr-4 text-center text-white/40">{p.quantidade}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`text-[11px] px-2 py-0.5 rounded-full border font-mono inline-flex items-center gap-1 ${st.color}`}>
-                          <st.icon className="w-3 h-3" /> {st.label}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openEdit(p)}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-white/20 hover:text-neon-cyan transition-all">
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => remove(p.id, p.nome)}
-                            className="p-1.5 rounded-lg hover:bg-white/[0.04] text-white/20 hover:text-red-400 transition-all">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        <>
+          {/* Mobile: card list */}
+          <div className="sm:hidden space-y-2">
+            {filtered.map((p) => {
+              const st = getStatus(p.expiryDate)
+              const isSelected = selected.has(p.id)
+              return (
+                <motion.div key={p.id} layout
+                  onClick={() => toggleSelect(p.id)}
+                  className={`glass-card p-4 rounded-2xl cursor-pointer transition-colors ${
+                    isSelected ? "border-neon-cyan/20" : ""
+                  }`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <button onClick={(e) => { e.stopPropagation(); toggleSelect(p.id) }}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0">
+                        {isSelected
+                          ? <CheckSquare className="w-5 h-5 text-neon-cyan" />
+                          : <Square className="w-5 h-5 text-white/20" />}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white/90 truncate">{p.nome}</p>
+                        <p className="text-xs text-white/30 mt-0.5">{p.categoria}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-1 rounded-full border font-mono whitespace-nowrap flex-shrink-0 ${st.color}`}>
+                        <st.icon className="w-3 h-3 inline mr-1" /> {st.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+                    <div className="flex items-center gap-4 text-xs text-white/30">
+                      <span>Val: {new Date(p.expiryDate).toLocaleDateString("pt-BR")}</span>
+                      <span>Qtd: {p.quantidade}</span>
+                    </div>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <button onClick={() => openEdit(p)}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-neon-cyan transition-all">
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => remove(p.id, p.nome)}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-red-400 transition-all">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
           </div>
-        </div>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block glass-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[11px] text-white/30 uppercase tracking-wider font-mono">
+                    <th className="py-3 pl-4 pr-2 w-10">
+                      <button onClick={toggleSelectAll} className="p-1" aria-label="Selecionar todos">
+                        {allFilteredSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" />
+                          : someFilteredSelected ? <ChevronDown className="w-4 h-4 text-white/40" />
+                          : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
+                      </button>
+                    </th>
+                    <th className="text-left py-3 pr-4">Produto</th>
+                    <th className="text-left py-3 pr-4">Categoria</th>
+                    <th className="text-left py-3 pr-4">Validade</th>
+                    <th className="text-center py-3 pr-4">Qtd</th>
+                    <th className="text-left py-3 pr-4">Status</th>
+                    <th className="text-right py-3 pr-4">A\u00e7\u00e3o</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p) => {
+                    const st = getStatus(p.expiryDate)
+                    const isSelected = selected.has(p.id)
+                    return (
+                      <tr key={p.id} onClick={() => toggleSelect(p.id)}
+                        className={`border-t border-white/[0.04] text-white/60 transition-colors cursor-pointer ${
+                          isSelected ? "bg-neon-cyan/[0.03]" : "hover:bg-white/[0.02]"
+                        }`}>
+                        <td className="py-3 pl-4 pr-2" onClick={(e) => e.stopPropagation()}>
+                          <button onClick={() => toggleSelect(p.id)} className="p-1" aria-label="Selecionar">
+                            {isSelected ? <CheckSquare className="w-4 h-4 text-neon-cyan" /> : <Square className="w-4 h-4 text-white/20 hover:text-white/40" />}
+                          </button>
+                        </td>
+                        <td className="py-3 pr-4 font-medium text-white/80">{p.nome}</td>
+                        <td className="py-3 pr-4 text-white/30">{p.categoria}</td>
+                        <td className="py-3 pr-4 text-white/40 text-[13px]">{new Date(p.expiryDate).toLocaleDateString("pt-BR")}</td>
+                        <td className="py-3 pr-4 text-center text-white/40">{p.quantidade}</td>
+                        <td className="py-3 pr-4">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full border font-mono inline-flex items-center gap-1 ${st.color}`}>
+                            <st.icon className="w-3 h-3" /> {st.label}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <button onClick={() => openEdit(p)}
+                              className="p-2 rounded-lg hover:bg-white/[0.04] text-white/20 hover:text-neon-cyan transition-all">
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => remove(p.id, p.nome)}
+                              className="p-2 rounded-lg hover:bg-white/[0.04] text-white/20 hover:text-red-400 transition-all">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       <AnimatePresence>
