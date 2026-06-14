@@ -3,8 +3,6 @@ import { requireAuth } from "@/lib/auth"
 import { getDB } from "@/lib/mongodb"
 import { getDataContext } from "@/lib/chat/context"
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434"
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.2"
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
@@ -20,26 +18,6 @@ const SYSTEM_PROMPT =
   "- Mostrar estat\u00edsticas de categorias mais comuns\n" +
   "- Recomendar prioridades com base nos prazos de validade\n" +
   "- Analisar tend\u00eancias com base no hist\u00f3rico de conversas"
-
-async function askOllama(messages: { role: string; content: string }[]) {
-  const res = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      messages,
-      stream: false,
-      options: { temperature: 0.7, num_predict: 2048 },
-    }),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    console.error("Ollama error:", res.status, text)
-    throw new Error(`Ollama: ${res.status} ${text}`)
-  }
-  const data = await res.json()
-  return data.message?.content || "Desculpe, n\u00e3o consegui gerar uma resposta."
-}
 
 async function askGemini(messages: { role: string; content: string }[]) {
   const contents = messages.map((m) => ({
@@ -112,36 +90,31 @@ export async function POST(request: NextRequest) {
 
     let response: string
 
-    try {
-      response = await askOllama(messages)
-    } catch (ollamaErr) {
-      console.warn("Ollama falhou:", ollamaErr)
-      if (GEMINI_API_KEY) {
-        try {
-          response = await askGemini(messages)
-        } catch (geminiErr) {
-          console.warn("Gemini falhou:", geminiErr)
-          if (OPENAI_API_KEY) {
-            try {
-              response = await askOpenAI(messages)
-            } catch (openaiErr) {
-              console.error("Todos os provedores falharam")
-              response = "Desculpe, todos os provedores de IA estão indisponíveis."
-            }
-          } else {
-            response = "Gemini indisponível e OpenAI não configurada."
+    if (GEMINI_API_KEY) {
+      try {
+        response = await askGemini(messages)
+      } catch (geminiErr) {
+        console.warn("Gemini falhou:", geminiErr)
+        if (OPENAI_API_KEY) {
+          try {
+            response = await askOpenAI(messages)
+          } catch (openaiErr) {
+            console.error("Ambos falharam:", openaiErr)
+            response = "Desculpe, a IA está indisponível no momento."
           }
+        } else {
+          response = "Gemini indisponível. Tente novamente mais tarde."
         }
-      } else if (OPENAI_API_KEY) {
-        try {
-          response = await askOpenAI(messages)
-        } catch (openaiErr) {
-          console.error("OpenAI falhou:", openaiErr)
-          response = "Desculpe, a IA está indisponível no momento."
-        }
-      } else {
-        response = "Nenhum provedor de IA disponível. Instale o Ollama (ollama run llama3.2) ou configure GEMINI_API_KEY/OPENAI_API_KEY."
       }
+    } else if (OPENAI_API_KEY) {
+      try {
+        response = await askOpenAI(messages)
+      } catch (openaiErr) {
+        console.error("OpenAI falhou:", openaiErr)
+        response = "Desculpe, a IA está indisponível no momento."
+      }
+    } else {
+      response = "Nenhum provedor de IA configurado. Adicione GEMINI_API_KEY ou OPENAI_API_KEY no .env.local"
     }
 
     const db = await getDB()
