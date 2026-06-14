@@ -5,22 +5,26 @@ import { FileText, ExternalLink } from "lucide-react"
 
 export default function PDFPage() {
   return (
-    <div className="space-y-4 h-[calc(100vh-6rem)] sm:h-[calc(100vh-4rem)] flex flex-col">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gradient tracking-tight">Editor de PDF</h1>
-            <p className="text-sm text-white/30 mt-0.5">Ferramentas completas para editar, converter e assinar PDFs</p>
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex items-center justify-between px-1 py-2 sm:py-3 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="p-1.5 sm:p-2 rounded-lg bg-white/[0.03] flex-shrink-0">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-neon-cyan/60" />
           </div>
-          <a href="https://pdf.see.ac.gov.br/?lang=pt_BR" target="_blank" rel="noopener noreferrer"
-            className="btn-neon text-xs px-4 py-2 hidden sm:flex items-center gap-2">
-            <ExternalLink className="w-3.5 h-3.5" /> Abrir em nova aba
-          </a>
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-lg font-bold text-gradient tracking-tight truncate">Editor de PDF</h1>
+            <p className="text-[10px] sm:text-xs text-white/30 truncate">Ferramentas completas da SEE/AC</p>
+          </div>
         </div>
-      </motion.div>
+        <a href="https://pdf.see.ac.gov.br/?lang=pt_BR" target="_blank" rel="noopener noreferrer"
+          className="btn-neon text-[11px] sm:text-xs px-3 sm:px-4 py-2 flex items-center gap-1.5 flex-shrink-0">
+          <ExternalLink className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Abrir em nova aba</span>
+        </a>
+      </div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        className="flex-1 rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01]">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="flex-1 rounded-xl sm:rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01] min-h-0">
         <iframe
           src="https://pdf.see.ac.gov.br/?lang=pt_BR"
           className="w-full h-full"
