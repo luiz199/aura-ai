@@ -22,7 +22,8 @@ const SYSTEM_PROMPT =
 const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"]
 
 async function askGemini(messages: { role: string; content: string }[]) {
-  const contents = messages.map((m) => ({
+  const systemMsg = messages.find((m) => m.role === "system")
+  const history = messages.filter((m) => m.role !== "system").map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }))
@@ -30,12 +31,18 @@ async function askGemini(messages: { role: string; content: string }[]) {
   let lastErr: Error | null = null
   for (const model of GEMINI_MODELS) {
     try {
+      const body: any = {
+        contents: history,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+      }
+      if (systemMsg) body.system_instruction = { parts: [{ text: systemMsg.content }] }
+
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents, generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } }),
+          body: JSON.stringify(body),
         },
       )
 
