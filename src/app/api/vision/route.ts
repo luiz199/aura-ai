@@ -1,50 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/lib/auth"
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
-
-const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"]
-
-async function analyzeWithGemini(imageBase64: string): Promise<string> {
-  const imageData = imageBase64.replace(/^data:image\/\w+;base64,/, "")
-
-  let lastErr: Error | null = null
-  for (const model of GEMINI_MODELS) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: "Analise esta imagem em detalhes. Descreva o que você vê, incluindo objetos, cores, texto, e contexto. Responda em português." },
-                { inline_data: { mime_type: "image/jpeg", data: imageData } },
-              ],
-            }],
-            generationConfig: { temperature: 0.5, maxOutputTokens: 1024 },
-          }),
-        },
-      )
-
-      if (!res.ok) {
-        const text = await res.text()
-        console.warn(`Gemini vision ${model} error:`, res.status, text.slice(0, 500))
-        lastErr = new Error(`${model}: ${res.status} ${text.slice(0, 200)}`)
-        continue
-      }
-
-      const data = await res.json()
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Não foi possível analisar a imagem."
-    } catch (e) {
-      lastErr = e as Error
-    }
-  }
-
-  throw lastErr || new Error("Todos os modelos Gemini vision falharam")
-}
 
 export async function POST(request: NextRequest) {
   const auth = await requireAuth(request)
@@ -54,13 +11,6 @@ export async function POST(request: NextRequest) {
     const { image } = await request.json()
     if (!image) {
       return NextResponse.json({ error: "Imagem não fornecida" }, { status: 400 })
-    }
-
-    if (GEMINI_API_KEY) {
-      try {
-        const description = await analyzeWithGemini(image)
-        return NextResponse.json({ description })
-      } catch { console.warn("Gemini vision indisponível") }
     }
 
     if (OPENAI_API_KEY) {
@@ -100,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      description: "Imagem recebida! Para análise, configure GEMINI_API_KEY ou OPENAI_API_KEY.",
+      description: "Imagem recebida! Para análise, configure OPENAI_API_KEY.",
     })
   } catch (error) {
     console.error("Vision error:", error)
