@@ -9,7 +9,7 @@ import { CardSkeleton, TableSkeleton } from "@/components/ui/Skeleton"
 import { CountUp } from "@/components/ui/CountUp"
 import {
   MessageSquareText, Users, FileText, Clock, TrendingUp,
-  Bot, Sparkles, ArrowUpRight, Apple, AlertTriangle, ChevronRight,
+  Apple, AlertTriangle, ChevronRight,
 } from "lucide-react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts"
 import toast from "react-hot-toast"
@@ -74,11 +74,6 @@ export default function DashboardPage() {
     { label: t?.dashboard?.ativos || "Usu\u00e1rios Ativos", value: data?.totalUsers ?? "3,891", icon: Users, color: "from-neon-purple/20 to-transparent", border: "border-neon-purple/20" },
     { label: t?.dashboard?.documentos || "Documentos", value: data?.totalDocumentos ?? "892", icon: FileText, color: "from-neon-green/20 to-transparent", border: "border-neon-green/20" },
     { label: t?.dashboard?.tempo || "Tempo M\u00e9dio", value: data?.tempoMedio ?? "4.2min", icon: Clock, color: "from-neon-cyan/20 to-transparent", border: "border-neon-cyan/20" },
-  ]
-
-  const recentActivity = data?.recentes || [
-    { acao: "Chat conclu\u00eddo", detalhe: "An\u00e1lise de documento financeiro", tempo: "2 min atr\u00e1s" },
-    { acao: "Tradu\u00e7\u00e3o realizada", detalhe: "Portugu\u00eas \u2192 Ingl\u00eas", tempo: "15 min atr\u00e1s" },
   ]
 
   return (
@@ -197,26 +192,6 @@ export default function DashboardPage() {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white/80">{t?.dashboard?.recente || "Atividade Recente"}</h3>
-            <Sparkles className="w-4 h-4 text-neon-cyan/50" />
-          </div>
-          <div className="space-y-2">
-            {recentActivity.map((item: any, i: number) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl glass-hover transition-all">
-                <div className="p-2 rounded-lg bg-white/[0.03] text-neon-cyan">
-                  <MessageSquareText className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white/70 truncate">{item.acao}</p>
-                  <p className="text-xs text-white/30 truncate">{item.detalhe}</p>
-                </div>
-                <span className="text-[10px] text-white/20 font-mono flex-shrink-0">{item.tempo}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </div>
   )
