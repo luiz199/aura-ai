@@ -13,6 +13,7 @@ const enUS = {
     configuracoes: "Settings",
     admin: "Admin",
     merenda: "Meals",
+    pdf: "PDF Editor",
   },
   dashboard: {
     title: "Dashboard",

@@ -15,6 +15,7 @@ import {
 const LINKS = [
   { href: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
   { href: "/dashboard/chat", icon: MessageSquareText, key: "chat" },
+  { href: "/dashboard/pdf", icon: FileText, key: "pdf" },
   { href: "/dashboard/estatisticas", icon: BarChart3, key: "estatisticas" },
   { href: "/dashboard/merenda", icon: Apple, key: "merenda", alerta: true },
   { href: "/dashboard/admin", icon: Shield, key: "admin" },

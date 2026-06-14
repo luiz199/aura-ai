@@ -13,6 +13,7 @@ const esES = {
     configuracoes: "Ajustes",
     admin: "Admin",
     merenda: "Merienda",
+    pdf: "Editor PDF",
   },
   dashboard: {
     title: "Panel",

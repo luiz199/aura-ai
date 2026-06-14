@@ -13,6 +13,7 @@ const ptBR = {
     configuracoes: "Configura\u00e7\u00f5es",
     admin: "Admin",
     merenda: "Merenda",
+    pdf: "Editor de PDF",
   },
   dashboard: {
     title: "Dashboard",
